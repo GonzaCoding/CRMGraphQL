@@ -76,6 +76,38 @@ const resolvers = {
             }
 
             return cliente;
+        },
+        obtenerPedidos: async () => {
+            try {
+                const pedidos = await Pedido.find({});
+                return pedidos;
+            }  catch (err) {
+                console.log(err);
+            }
+        },
+        obtenerPedidosVendedor: async (_, {}, ctx) => {
+            try {
+                const pedidos = await Pedido.find({vendedor: ctx.usuario.id });
+                return pedidos;
+            }  catch (err) {
+                console.log(err);
+            }
+        },
+        obtenerPedido: async (_, {id}, ctx) => {
+            //ver si el pedido existe
+            const pedido = await Pedido.findById(id);
+
+            if(!pedido) {
+                throw new Error("No existe el pedido");
+            }
+
+            //si tiene credenciales
+            if(pedido.vendedor.toString() !== ctx.usuario.id) {
+                throw new Error("El pedido es de otro usuario, no puedes verlo");
+            }
+
+            return pedido;
+
         }
     },
     Mutation: {
@@ -262,6 +294,19 @@ const resolvers = {
             const resultado = await nuevoPedido.save();
 
             return resultado;
+
+        },
+        actualizarPedido: async (_,{id, input},ctx) => {
+            //si el pedido existe
+            const existePedido = await Pedido.findById(id);
+
+            // si el cliente existe
+
+            //si el cliente y pedido pertenece al vendedor
+
+            //revisar stock
+
+            //actualizar pedido
 
         }
     }
