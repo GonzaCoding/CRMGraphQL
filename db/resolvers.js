@@ -108,6 +108,66 @@ const resolvers = {
 
             return pedido;
 
+        },
+        obtenerPedidosEstado: async (_, {estado},ctx) => {
+            const pedidos = await Pedido.find({vendedor: ctx.usuario.id, estado});
+            return pedidos;
+        },
+        mejoresClientes: async () => {
+            const clientes = await Pedido.aggregate([
+                { $match: { estado: "COMPLETADO"} },
+                { $group: {
+                    _id: "$cliente",
+                    total: {$sum: "$total"}
+                }},
+                {
+                    $lookup: {
+                        from: "clientes",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "cliente"
+                    }
+                },
+                {
+                    $limit: 10
+                },
+                {
+                    $sort: { total: -1 }
+                }
+            ]);
+
+            return clientes;
+        },
+        mejoresVendedores: async () => {
+            const vendedores = await Pedido.aggregate([
+                { $match: { estado: "COMPLETADO"} },
+                { $group: {
+                    _id: "$vendedor",
+                    total: {$sum: "$total"}
+                }},
+                {
+                    $lookup: {
+                        from: "usuarios",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "vendedor"
+                    }
+                },
+                {
+                    $limit: 3
+                },
+                {
+                    $sort: { total: -1 }
+                },
+
+            ]);
+
+            return vendedores;
+        },
+        buscarProducto: async (_, {texto}) => {
+            const productos = await Producto.find({$text: { $search: texto }}).limit(10);
+
+            return productos;
         }
     },
     Mutation: {
@@ -258,14 +318,14 @@ const resolvers = {
             const {cliente} = input;
 
             //verificar si el cliente existe
-            const clienteExiste = await Cliente.findById(cliente);
+            const existeCliente = await Cliente.findById(cliente);
 
-            if(!clienteExiste){
+            if(!existeCliente){
                 throw new Error("El cliente no existe");
             }
 
             //verificar si el cliente es del vendedor
-            if(clienteExiste.vendedor.toString() !== ctx.usuario.id) {
+            if(existeCliente.vendedor.toString() !== ctx.usuario.id) {
                 throw new Error("El cliente es de otro usuario, no puedes realizar la operación");
             }
 
@@ -297,16 +357,67 @@ const resolvers = {
 
         },
         actualizarPedido: async (_,{id, input},ctx) => {
+            const {cliente, pedido} = input;
+            
             //si el pedido existe
             const existePedido = await Pedido.findById(id);
 
+            if(!existePedido) {
+                throw new Error("El pedido no existe");
+            }
+
             // si el cliente existe
+            const existeCliente = await Cliente.findById(cliente);
+
+            if(!existeCliente){
+                throw new Error("El cliente no existe");
+            }
 
             //si el cliente y pedido pertenece al vendedor
+            if(existeCliente.vendedor.toString() !== ctx.usuario.id) {
+                throw new Error("El cliente es de otro usuario, no puedes realizar la operación");
+            }
 
             //revisar stock
+            if(pedido) {
+                for await (const articulo of pedido) {
+                    const {id} = articulo;
+    
+                    const producto = await Producto.findById(id);
+    
+                    if(articulo.cantidad > producto.existencia) {
+                        throw new Error (`El artículo ${producto.nombre} excede la cantidad disponible`);
+                    } else {
+                        //restar stock
+                        producto.existencia -= articulo.cantidad;
+                        await producto.save();
+                    }
+                }
+            }
+            
 
             //actualizar pedido
+            const resultado = await Pedido.findOneAndUpdate({_id: id}, input, {new: true});
+            return resultado;
+        },
+        eliminarPedido: async (_,{id}, ctx) => {
+            
+            //si el pedido existe
+            const pedido = await Pedido.findById(id);
+
+            if(!pedido) {
+                throw new Error("El pedido no existe");
+            }
+
+            //si el cliente y pedido pertenece al vendedor
+            if(pedido.vendedor.toString() !== ctx.usuario.id) {
+                throw new Error("El pedido es de otro usuario, no puedes realizar la operación");
+            }
+
+            //eliminar
+            await Pedido.findOneAndDelete({_id: id});
+
+            return "Pedido eliminado";
 
         }
     }
