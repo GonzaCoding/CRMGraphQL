@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { gql, useMutation } from '@apollo/client';
-import { Router, useRouter } from 'next/router';
-import { route } from 'next/dist/next-server/server/router';
+import { useRouter } from 'next/router';
 
 const NUEVO_CLIENTE = gql`
 
@@ -20,9 +19,40 @@ const NUEVO_CLIENTE = gql`
 
 `;
 
+const OBTENER_CLIENTES_USUARIO = gql`
+
+    query obtenerClientesVendedor {
+        obtenerClientesVendedor {
+            nombre
+            apellido
+            empresa
+            email
+        }
+    }
+
+`;
+
 const NuevoCliente = () => {
 
-    const [ nuevoCliente ] = useMutation(NUEVO_CLIENTE);
+    const [mensaje, setMensaje] = useState(null);
+
+    const [ nuevoCliente ] = useMutation(NUEVO_CLIENTE, {
+        update(cache, { data: { nuevoCliente } }) {
+            //obtener el objeto de cache que quiero actualizar
+
+            const { obtenerClientesVendedor } = cache.readQuery({
+                query: OBTENER_CLIENTES_USUARIO
+            });
+
+            //reescribir el cache (es inmutable, nunca se debe modificar. sí reescribir)
+            cache.writeQuery({
+                query: OBTENER_CLIENTES_USUARIO,
+                data: {
+                    obtenerClientesVendedor: [...obtenerClientesVendedor, nuevoCliente]
+                }
+            })
+        }
+    });
 
     const router = useRouter();
 
@@ -65,15 +95,29 @@ const NuevoCliente = () => {
                 //console.log(data.nuevoCliente);
                 router.push('/');
             } catch (error) {
-                console.log(error);
+                setMensaje(error.message.replace('GraphQL error: ', ''));
+
+                setTimeout( ()=> {
+                    setMensaje(null);
+                }, 2000);
             }
         }
     });
+
+    const mostrarMensaje = () => {
+        return (
+            <div className="bg-white py-2 px-3 w-full my-3 max-w-sm text-center mx-auto">
+                <p>{mensaje}</p>
+            </div>
+        )
+    }
 
 
     return (
         <Layout>
             <h1 className="text-2xl text-gray-800 font-light">Nuevo Cliente</h1>
+
+            { mensaje && mostrarMensaje() }
 
             <div className="flex justify-center mt-5">
                 <div className="w-full max-w-lg">
