@@ -93,6 +93,13 @@ const NuevoCliente = () => {
                 });
 
                 //console.log(data.nuevoCliente);
+
+                Swal.fire(
+                    'Creado',
+                    'Se creó el Cliente correctamente',
+                    'success'
+                );
+
                 router.push('/');
             } catch (error) {
                 setMensaje(error.message.replace('GraphQL error: ', ''));
@@ -132,7 +139,7 @@ const NuevoCliente = () => {
                             <input
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="nombre"
-                                type="nombre"
+                                type="text"
                                 placeholder="Nombre cliente..."
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -154,7 +161,7 @@ const NuevoCliente = () => {
                             <input
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="apellido"
-                                type="apellido"
+                                type="text"
                                 placeholder="Apellido cliente..."
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -176,7 +183,7 @@ const NuevoCliente = () => {
                             <input
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="empresa"
-                                type="empresa"
+                                type="text"
                                 placeholder="Empresa cliente..."
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
