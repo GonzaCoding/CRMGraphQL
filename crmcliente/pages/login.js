@@ -35,8 +35,7 @@ const Login = () => {
                         .required('El password es obligatorio')
         }),
         onSubmit: async valores => {
-            console.log(valores);
-
+            
             const {email, password} = valores;
 
             try {
@@ -49,7 +48,6 @@ const Login = () => {
                     }
                 });
 
-                console.log(data);
                 setMensaje('Autenticando...');
 
                 const {token} = data.autenticarUsuario;
