@@ -3,21 +3,21 @@ import Layout from '../components/Layout';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { gql, useQuery } from '@apollo/client';
 
-const MEJORES_VENDEDORES  = gql`
-    query mejoresVendedores{
-        mejoresVendedores {
-            vendedor {
+const MEJORES_CLIENTES  = gql`
+    query mejoresClientes{
+        mejoresClientes {
+            cliente {
                 nombre
-                email
+                empresa
             }
             total
         }
     }
 `;
 
-const MejoresVendedores = () => {
+const MejoresClientes = () => {
 
-    const { data, loading, error, startPolling, stopPolling } = useQuery(MEJORES_VENDEDORES);
+    const { data, loading, error, startPolling, stopPolling } = useQuery(MEJORES_CLIENTES);
 
     useEffect(() => {
         startPolling(1000);
@@ -28,27 +28,27 @@ const MejoresVendedores = () => {
 
     if(loading) return 'Cargando...';
 
-    const { mejoresVendedores } = data;
+    const { mejoresClientes } = data;
 
-    const vendedorGrafica = [];
+    const clientesGrafica = [];
 
-    mejoresVendedores.map((vendedor, index) => {
-        vendedorGrafica[index] = {
-            ...vendedor.vendedor[0],
-            total: vendedor.total
+    mejoresClientes.map((cliente, index) => {
+        clientesGrafica[index] = {
+            ...cliente.cliente[0],
+            total: cliente.total
         }
     });
 
     return (
         <Layout>
-            <h1 className="text-2xl text-gray-800 font-light">Mejores Vendedores</h1>
+            <h1 className="text-2xl text-gray-800 font-light">Mejores Clientes</h1>
 
 
             <ResponsiveContainer width="99%" height={550}>
                 <BarChart
                     width={600}
                     height={500}
-                    data={vendedorGrafica}
+                    data={clientesGrafica}
                     margin={{
                         top: 5,
                         right: 30,
@@ -68,4 +68,4 @@ const MejoresVendedores = () => {
     )
 }
 
-export default MejoresVendedores;
+export default MejoresClientes;
