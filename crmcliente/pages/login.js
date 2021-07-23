@@ -50,9 +50,10 @@ const Login = () => {
 
                 setMensaje('Autenticando...');
 
-                const {token} = data.autenticarUsuario;
-
-                localStorage.setItem('token', token);
+                setTimeout(() => {
+                    const {token} = data.autenticarUsuario;
+                    localStorage.setItem('token', token);
+                }, 1000);             
 
                 setTimeout(()=>{
                     setMensaje(null); 
